@@ -13,11 +13,9 @@ public:
 		}
 		delete[] data;
 	}
-	matrix_t(unsigned int rows = 0, unsigned int columns = 0) {     // Constructor
+	matrix_t(const matrix_t & object, unsigned int rows = 0, unsigned int columns = 0) {     // Constructor
 		this->rows = rows;
 		this->columns = columns;
-	}
-	matrix_t(const matrix_t & object) {          // Copying the constructor
 		rows = object.rows;
 		columns = object.columns;
 		data = new int *[rows];
