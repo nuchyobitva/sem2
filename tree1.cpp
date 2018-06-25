@@ -5,8 +5,13 @@ class tree_t {
 		node_t * left;
 		node_t * right;
 		int value;
+		~node_t() {
+			if (left != nullptr) delete left;
+			if (right != nullptr)delete right;
+		}
   };
 	node_t * root = NULL;
+	
 public:
 
 	void insert(int value) {
@@ -73,6 +78,8 @@ public:
 	void help_print(ostream & stream) {
 		help_print(stream,root, 0);
 	    }
+     
+ ~tree_t() {		if (root != nullptr) delete root; 	}
 	};
 
 
