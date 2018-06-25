@@ -1,196 +1,231 @@
 #include <iostream>
-#include <sstream>
 #include <fstream>
+#include <sstream>
+
 using namespace std;
+
+int ** Create_Matrix(int stroki, int stolbi) {
+    int ** New_Matrix = new int * [stroki];
+    for (int i = 0; i < stroki; i++) {
+        New_Matrix[i] = new int[stolbi];
+    }
+    return New_Matrix;
+}
 class matrix_t {
-	int **data;
-	unsigned int rows;
-	unsigned int columns;
+    unsigned int stroki, stolbi;
+    int ** data;
+    
 public:
-	~matrix_t() {                                      	// Destructor
-		for (unsigned int i = 0; i < rows; i++) { 
-			delete[] data[i];
-		}
-		delete[] data;
-	}
-	matrix_t(const matrix_t & object, unsigned int rows = 0, unsigned int columns = 0) {     // Constructor
-		this->rows = rows;
-		this->columns = columns;
-		rows = object.rows;
-		columns = object.columns;
-		data = new int *[rows];
-		for (unsigned int i = 0; i < rows; ++i) {
-			data[i] = new int[columns];
-			for (unsigned int j = 0; j < columns; ++j) {
-				data[i][j] = object.data[i][j];
-			}
-		}
-	}
-	matrix_t add(matrix_t & other) {
-		if (!(rows == other.rows && columns == other.columns))
-		{
-			cout << "An error has occured while reading input data.\n";
-			exit(0);
-		}
-
-		matrix_t res(rows, columns);
-		res.data = new int *[rows];
-		for (unsigned int i = 0; i < rows; ++i) {
-			res.data[i] = new int[columns];
-			for (unsigned int j = 0; j < columns; ++j) {
-				res.data[i][j] = data[i][j] + other.data[i][j];
-			}
-		}
-		return res;
-	}
-	matrix_t sub(matrix_t & other) {
-		if (!(rows == other.rows && columns == other.columns))
-		{
-			cout << "An error has occured while reading input data.\n";
-			exit(0);
-		}
-		matrix_t res(rows, columns);
-		res.data = new int *[rows];
-		for (unsigned int i = 0; i < rows; ++i) {
-			res.data[i] = new int[columns];
-			for (unsigned int j = 0; j < columns; ++j) {
-				res.data[i][j] = data[i][j] - other.data[i][j];
-			}
-		}
-		return res;
-	}
-	matrix_t mul(matrix_t & other) {
-		if (columns != other.rows){
-			cout << "An error has occured while reading input data.\n";
-			exit(0);
-		}
-		matrix_t res(rows, other.columns);
-		res.data = new int *[rows];
-		for (unsigned int i = 0; i < rows; ++i) {
-			res.data[i] = new int[columns];
-			for (unsigned int j = 0; j < other.columns; ++j) {
-				res.data[i][j] = 0;
-				for (int k = 0; k < columns; k++)
-					res.data[i][j] += (data[i][k] * other.data[k][j]);
-			}
-		}
-		return res;
-	}
-	matrix_t trans() {
-		matrix_t res(columns, rows);
-		res.data = new int *[columns];
-		for (unsigned int i = 0; i < columns; ++i) {
-			res.data[i] = new int[rows];
-			for (unsigned int j = 0; j < rows; ++j) {
-				res.data[i][j] = data[j][i];
-			}
-		}
-		return res;
-	}
-	ifstream & read(ifstream & stream) {
-		string line, str;
-		getline(stream, line);
-		int rows, columns;
-		char symbol;
-		if (!(stream >> rows && stream >> symbol && symbol == ',' && stream >> columns)){
-			stream.setstate(ios::failbit);
-			return stream;
-		}
-		this->rows = rows;
-		this->columns = columns;
-		int ** elements = new int *[rows];
-		for (unsigned int i = 0; i < rows; ++i) {
-			elements[i] = new int[columns];
-			getline(stream, str);
-			for (unsigned int j = 0; j < columns; ++j) {
-				if (!(stream >> elements[i][j])) {
-					stream.setstate(ios::failbit);
-					return stream;
-				}
-			}
-		}
-		data = new int *[rows];
-		for (unsigned int i = 0; i < rows; ++i) {
-			data[i] = new int[columns];
-			for (unsigned int j = 0; j < columns; ++j) {
-				data[i][j] = elements[i][j];
-			}
-		}
-		for (unsigned int i = 0; i < rows; ++i) {
-			delete[] elements[i];
-		}
-		delete[] elements;
-		return stream;
-	}
-	ostream & write(ostream & stream) {
-		stream << endl;
-		for (int i = 0; i < rows; ++i) {
-			for (int j = 0; j < columns; ++j) {
-				stream << data[i][j] << ' ';
-			}
-			stream << endl;
-		}
-		return stream;
-	}
+    //конструктор и декструктор
+    matrix_t(int in_stroki, int in_stolbi) {
+        stroki = in_stroki;
+        stolbi = in_stolbi;
+        data = Create_Matrix(stroki, stolbi);
+    }~matrix_t() {
+        for (int i = 0; i < stroki; i++) {
+            delete[] data[i];
+        }
+        delete[] data;
+        cout << "DESTRUCTOR" << '\n';
+    }
+    
+    // копирует конструктор
+    matrix_t(const matrix_t & object) {
+        stroki = object.stroki;
+        stolbi = object.stolbi;
+        data = Create_Matrix(stroki, stolbi);
+        for (int i = 0; i < stroki; ++i) {
+            for (int j = 0; j < stolbi; ++j) {
+                data[i][j] = object.data[i][j];
+            }
+        }
+        cout << "Copy_constructor" << '\n';
+    }
+    
+    // методы
+    ifstream & read(ifstream & stream) {
+        string size_mat;
+        char symbol = ',';
+        getline(stream, size_mat);
+        istringstream str(size_mat);
+        if (str >> stroki && str >> symbol && str >> stolbi) {
+            data = Create_Matrix(stroki, stolbi);
+            Zapolnenie_mat(stream, stroki, stolbi, data);
+        }
+        else {
+            cout << "An error has occured while reading input data" << '\n';
+        }
+        return stream;
+    }
+    
+    void Zapolnenie_mat(ifstream & file, int stroki_in, int stolbi_in, int ** data) {
+        for (int i = 0; i < stroki_in; i++) {
+            string stroka;
+            getline(file, stroka);
+            istringstream str(stroka);
+            for (int j = 0; j < stolbi_in; j++) {
+                if (!(str >> data[i][j])) {
+                    break;
+                }
+            }
+        }
+    }
+    
+    ostream & write(ostream & stream1) {
+        
+        for (int i = 0; i < stroki; i++) {
+            for (int j = 0; j < stolbi; j++) {
+                stream1 << data[i][j] << " ";
+            }
+            stream1 << '\n';
+        }
+        return stream1;
+    }
+    
+    matrix_t add(matrix_t & other) const {
+        matrix_t result(stroki, stolbi);
+        for (int i = 0; i < stroki; i++) {
+            for (int j = 0; j < stolbi; j++) {
+                result.data[i][j] = data[i][j] + other.data[i][j];
+            }
+        }
+        return result;
+    }
+    
+    matrix_t sub(matrix_t & other) const {
+        matrix_t result(stroki, stolbi);
+        for (int i = 0; i < stroki; i++) {
+            for (int j = 0; j < stolbi; j++) {
+                result.data[i][j] = data[i][j] - other.data[i][j];
+            }
+        }
+        return result;
+    }
+    
+    matrix_t mul(matrix_t & other) const {
+        matrix_t result(stroki, other.stolbi);
+        for (int i = 0; i < stroki; i++) {
+            for (int j = 0; j < other.stolbi; j++) {
+                result.data[i][j] = 0;
+                for (int h = 0; h < stolbi; h++) {
+                    result.data[i][j] += data[i][h] * other.data[h][j];
+                }
+            }
+        }
+        return result;
+    }
+    matrix_t trans() const {
+        matrix_t result(stolbi, stroki);
+        for (int i = 0; i < stolbi; i++) {
+            for (int j = 0; j < stroki; j++) {
+                result.data[i][j] = data[j][i];
+            }
+        }
+        return result;
+    }
+    unsigned int Get_Stroki() {
+        return stroki;
+    }
+    unsigned int Get_Stolbi() {
+        return stolbi;
+    }
 };
-bool read(istream & stream, matrix_t & matrix)
-{
-	string file_name;
-	if (stream >> file_name) {
-		ifstream fin;
-		fin.open(file_name);
-		if((fin.is_open()) && (matrix.read(fin)))
-			return true;
-	}
-	return false;
+
+bool get_name_matr(ifstream & f1, ifstream & f2, string & name_file1, string &name_file2, char & op) {
+    string enter;
+    getline(cin, enter);
+    istringstream file(enter);
+    char op2;
+    while (file >> op2) {
+        if (op2 != '+' && op2 != '-' && op2 != '*' && op2 != 'T') {
+            name_file1 += op2;
+        }
+        if (op2 == '+' || op2 == '-' || op2 == '*' || op2 == 'T') {
+            op = op2;
+            if (op2 == 'T') break;
+            while (file >> op2) {
+                if (op2 != '+' && op2 != '-' && op2 != '*' && op2 != 'T') {
+                    name_file2 += op2;
+                }
+                else return false;
+            }
+            break;
+        }
+    }
+    if (name_file1 != "") {
+        f1.open(name_file1);
+    }
+    if (name_file2 != "") {
+        f2.open(name_file2);
+    }
+    if (f1.is_open() && (op == 'T')) return true;
+    else if (f1.is_open() && f2.is_open()) return true;
+    else return false;
 }
-void creat_files(){
-	ofstream fout;
-	fout.open("A.txt");
-	fout << "A.txt\n3, 3\n1 2 3\n4 5 6\n7 8 9";
-	fout.close();
 
-	fout.open("B.txt");
-	fout << "B.txt\n3, 3\n1 0 0\n0 1 0\n0 0 1";
-	fout.close();
-
-	fout.open("C.txt");
-	fout << "C.txt\n3, 3\n1 1 1\n2 1 2\n3 1 3";
-	fout.close();
-
-	fout.open("D.txt");
-	fout << "D.txt\n2, 3\n7 3\n2 1\n3 9";
-	fout.close();
-}
-int main(){
-	creat_files();
-	matrix_t a;
-	char op;
-	if (read(cin, a) && cin >> op) {
-		if (op == 'T') {
-			matrix_t res = a.trans();
-			res.write(cout);
-		}
-		else if (op == '+' || op == '-' || op == '*') {
-			matrix_t b;
-			if (read(cin, b)) {
-				if (op == '+') {
-					matrix_t res = a.add(b);
-					res.write(cout);
-				}
-				else if (op == '-') {
-					matrix_t res = a.sub(b);
-					res.write(cout);
-				}
-				else if (op == '*') {
-					matrix_t res = a.mul(b);
-					res.write(cout);
-				}
-			}
-			else 	cout << "An error has occured while reading input data.\n";
-		}
-		else 	cout << "An error has occured while reading input data.\n";
-	}
-	else 	cout << "An error has occured while reading input data.\n";
-	return 0;
+int main() {
+    matrix_t a(0, 0), b(0, 0);
+    ifstream f1, f2;
+    string name_file1 = "";
+    string name_file2 = "";
+    char op;
+    if (!get_name_matr(f1, f2, name_file1, name_file2, op)) {
+        cout << "An error has occured while reading input data" << '\n';
+        return 0;
+    }
+    
+    switch (op) {
+        case '+':
+        {
+            a.read(f1);
+            b.read(f2);
+            if (a.Get_Stolbi() == b.Get_Stolbi() && a.Get_Stroki() == b
+                .Get_Stroki()) {
+                matrix_t c = a.add(b);
+                c.write(cout);
+            }
+            else cout <<
+                "An error has occured while reading input data" << '\n';
+        }
+            break;
+            
+        case '-':
+        {
+            a.read(f1);
+            b.read(f2);
+            if (a.Get_Stolbi() == b.Get_Stolbi() && a.Get_Stroki() == b
+                .Get_Stroki()) {
+                matrix_t c = (a.sub(b));
+                c.write(cout);
+            }
+            else cout <<
+                "An error has occured while reading input data" << '\n';
+        }
+            break;
+            
+        case '*':
+        {
+            a.read(f1);
+            b.read(f2);
+            if (a.Get_Stolbi() == b.Get_Stroki()) {
+                matrix_t c = (a.mul(b));
+                c.write(cout);
+            }
+            else cout <<
+                "An error has occured while reading input data" << '\n';
+        }
+            break;
+            
+        case 'T':
+        {
+            a.read(f1);
+            matrix_t c = (a.trans());
+            c.write(cout);
+        }
+            break;
+        default:
+            cout << "An error has occured while reading input data" << '\n';
+            break;
+    }
+    return 0;
 }
