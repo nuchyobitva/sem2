@@ -1,15 +1,12 @@
 #include <iostream>
 using namespace std;
-
-class tree_t
-{
+class tree_t {
 	struct node_t {
 		node_t * left;
 		node_t * right;
 		int value;
   };
 	node_t * root = NULL;
-	//root = NULL;
 public:
 
 	void insert(int value) {
@@ -79,8 +76,7 @@ public:
 	};
 
 
-int main()
-{
+int main(){
 	char op; int a;
 	tree_t tree;
 	cin >> op;
